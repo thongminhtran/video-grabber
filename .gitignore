@@ -1,0 +1,18 @@
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# npm scratch (got dumped here by accident on first install)
+_cacache/
+_npx/
+_update-notifier-last-checked
+
+# python bytecode
+__pycache__/
+*.pyc
+
+# Build artifacts intentionally committed (dist/) so end users can load the
+# extension unpacked without needing Node/npm. Comment out the next line if
+# you'd rather keep dist out of the repo.
+# dist/

@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Video Grabber",
+  "version": "0.1.0",
+  "description": "Detect MP4/WebM and HLS streams playing in any tab and download them at the highest available quality.",
+  "minimum_chrome_version": "109",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw31z5akJqmQYujRCaHnzxroNJIcoVuCzcjB5tW/+ERp0ZtzATn03GzhekbgM+zL/rQu+9kFPxFGj5Bf7YzwwnEj93czk8lsVF7q4+a0V/sbGzxmA4vcqUQJDq6x+2BlrcP9DPDD1y4Dn4VgFSCdLfCHJVj4lz5zpMR10D8Y586nJr8rs5OEmOheFFQziTjAFXiFUF32eNpXoyKFkrlVMZyDv52ptIcfdDOc5tB2LNj7c9g+DUSqs+PGJwWs+JY7P6D89E4GG5xZ8sYYn4ZFhD55ZmDJjWoL5aof28/nfi5dMsb8NQLcqKBxFky5nw8EnTOkaxAOTMz0FPtxpCp/EOwIDAQAB",
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "Video Grabber"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/content-script.ts"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "permissions": [
+    "webRequest",
+    "downloads",
+    "storage",
+    "activeTab",
+    "tabs",
+    "scripting",
+    "offscreen",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess",
+    "nativeMessaging"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/offscreen/offscreen.html", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
