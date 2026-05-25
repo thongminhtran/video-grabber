@@ -4,6 +4,8 @@ A browser extension that lets you download videos playing on any website.
 
 Works on Edge, Chrome, Brave.
 
+![Video Grabber popup on YouTube with yt-dlp support](screenshot.png)
+
 ## How to install
 
 ### Step 1 — Download
