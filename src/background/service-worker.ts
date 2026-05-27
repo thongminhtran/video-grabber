@@ -119,6 +119,19 @@ function classify(url: string, mime?: string): StreamKind {
   }
   // Heuristic: looks like an HLS-style path even without explicit extension
   if (HLS_TEXT_HINT_RE.test(u)) return "hls";
+  // YouTube/googlevideo URLs carry mime in query params (e.g. mime=video%2Fmp4)
+  try {
+    const urlMime = new URL(url).searchParams.get("mime");
+    if (urlMime) {
+      if (/mpegurl/i.test(urlMime)) return "hls";
+      if (/dash/i.test(urlMime)) return "dash";
+      if (/mp4|webm|x-matroska|quicktime/i.test(urlMime))
+        return /webm/i.test(urlMime) ? "webm" : "mp4";
+      if (/^video\//i.test(urlMime)) return "mp4";
+    }
+  } catch { /* invalid URL */ }
+  // Fallback: response MIME says video but URL has no recognizable extension
+  if (mime && /^video\//i.test(mime)) return "mp4";
   return "unknown";
 }
 
@@ -138,6 +151,8 @@ function shouldSniff(url: string, mime?: string): boolean {
   }
   // URL path hint without extension: e.g. .../hls/.../playlist or .../master?token=...
   if (HLS_TEXT_HINT_RE.test(path) && /\.(m3u8|ts|m4s)/.test(path)) return true;
+  // Google CDN videoplayback URLs (carry mime= in query params)
+  if (/googlevideo\.com\/videoplayback/.test(url)) return true;
   return false;
 }
 
@@ -214,7 +229,10 @@ chrome.webRequest.onResponseStarted.addListener(
       return;
     }
 
-    const kind = classify(details.url, mime);
+    let kind = classify(details.url, mime);
+    if (kind === "unknown" && mime && /^video\//i.test(mime)) {
+      kind = "mp4";
+    }
     if (kind === "unknown") {
       if (DEBUG_LOG) console.log("[vg] sniffed but unclassified:", { url: details.url, mime, type: details.type });
       return;
@@ -454,8 +472,9 @@ async function handleDownload(streamId: string, qualityUrl?: string, filename?: 
 
   const referer = stream.pageUrl ?? stream.requestHeaders?.["Referer"] ?? stream.requestHeaders?.["referer"];
 
-  if (stream.kind === "mp4" || stream.kind === "webm") {
-    const fname = filename ?? buildFilename(stream, stream.kind);
+  if (stream.kind === "mp4" || stream.kind === "webm" || stream.kind === "dash" || stream.kind === "unknown") {
+    const ext = stream.kind === "webm" ? "webm" : "mp4";
+    const fname = filename ?? buildFilename(stream, ext);
     const ruleId = await installRefererRule(stream.url, referer);
     try {
       const downloadId = await chrome.downloads.download({ url: stream.url, filename: fname, saveAs: true });
